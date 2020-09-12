@@ -41,7 +41,10 @@ col_names = [
 class TestMarineTraffic():
   def __init__(self, fixname, driverpath):
     self.name = fixname
-    self.driver = webdriver.Chrome(driverpath)
+    options = webdriver.ChromeOptions()
+    options.add_argument('headless')
+    self.driver = webdriver.Chrome(driverpath,options=options)
+    
     self.vars = {}
   
   def teardown_method(self, method):
@@ -88,7 +91,7 @@ class TestMarineTraffic():
 #     # 13 | runScript | window.scrollTo(0,1295) | 
     html = self.driver.find_element_by_tag_name('html')
     html.send_keys(Keys.PAGE_DOWN)
-    time.sleep(0.5)
+    time.sleep(0.25)
     html.send_keys(Keys.PAGE_DOWN)
     time.sleep(0.5)
     html.send_keys(Keys.PAGE_DOWN)
@@ -182,7 +185,10 @@ class TestMarineTraffic():
     namehistory = self.driver.find_elements(By.XPATH, "//*[@id='Ex_Names_History-content']/div/table/tbody/tr")
     namelist = ''
     for x in range(len(namehistory)):
-      flag = namehistory[x].find_element(By.XPATH, "td[1]/img").get_attribute("alt")
+      if (len(namehistory[x].find_elements(By.XPATH, "td[1]/img")) !=0 ):
+        flag = namehistory[x].find_element(By.XPATH, "td[1]/img").get_attribute("alt")
+      else:
+        flag = 'NA'
       name = namehistory[x].find_element(By.XPATH, "td[2]").text
       lastdate = namehistory[x].find_element(By.XPATH, "td[3]").text
       namelist = namelist + flag + '~' + name + '~' + lastdate + '|'
@@ -211,26 +217,31 @@ dataList = dataList.astype(str)
 #dataList = dataList[dataList['Name_New'].isnull()]
 IMOChecker = TestMarineTraffic('IMO Check', driverpath)
 
-#vesseldetail = IMOChecker.test_marineTraffic("9198305")
+#vesseldetail = IMOChecker.test_marineTraffic("9085596")
 #for index, rowList in dataList.iterrows(): 
 for i in range(len(dataList)):
-  randomrow = random.randint(1,len(dataList)-1)
-  if ('nan' == dataList.at[randomrow,'Name_New']):
-    vesseldetail = IMOChecker.test_marineTraffic(dataList.at[randomrow,'LLoydNumber'])
-    dataList.at[randomrow,'Name_New'] = vesseldetail['name']
-    dataList.at[randomrow,'MMSI'] = vesseldetail['mmsi']
-    dataList.at[randomrow,'GrossRegisterTonnage_New'] = vesseldetail['grosstonnage']
-    dataList.at[randomrow,'NetRegisterTonnage_NEW'] = ''
-    dataList.at[randomrow,'CallSign'] = vesseldetail['callsign']
-    dataList.at[randomrow,'Flag'] = vesseldetail['flag']
-    dataList.at[randomrow,'Length'] = vesseldetail['length']
-    dataList.at[randomrow,'Beam'] = vesseldetail['beam']
-    dataList.at[randomrow,'Draught'] = ''
-    dataList.at[randomrow,'Deadweight'] = vesseldetail['deadweight']
-    dataList.at[randomrow,'YearBuilt'] = vesseldetail['yearbuilt']
-    dataList.at[randomrow,'OldNames'] = vesseldetail['oldnames']
-    dataList.at[randomrow,'Status'] = vesseldetail['status']
-    
-    dataList.to_csv('src/Vessel Referential Correction.csv',columns=col_names, index=False)
-    
-    print("Completed: " + str(i))
+  try:
+    randomrow = random.randint(1,len(dataList)-1)
+    if ('nan' == dataList.at[randomrow,'Name_New']):
+      print("Started: " + str(i) + " for: " + dataList.at[randomrow,'LLoydNumber'])
+      vesseldetail = IMOChecker.test_marineTraffic(dataList.at[randomrow,'LLoydNumber'])
+      dataList.at[randomrow,'Name_New'] = vesseldetail['name']
+      dataList.at[randomrow,'MMSI'] = vesseldetail['mmsi']
+      dataList.at[randomrow,'GrossRegisterTonnage_New'] = vesseldetail['grosstonnage']
+      dataList.at[randomrow,'NetRegisterTonnage_NEW'] = ''
+      dataList.at[randomrow,'CallSign'] = vesseldetail['callsign']
+      dataList.at[randomrow,'Flag'] = vesseldetail['flag']
+      dataList.at[randomrow,'Length'] = vesseldetail['length']
+      dataList.at[randomrow,'Beam'] = vesseldetail['beam']
+      dataList.at[randomrow,'Draught'] = ''
+      dataList.at[randomrow,'Deadweight'] = vesseldetail['deadweight']
+      dataList.at[randomrow,'YearBuilt'] = vesseldetail['yearbuilt']
+      dataList.at[randomrow,'OldNames'] = vesseldetail['oldnames']
+      dataList.at[randomrow,'Status'] = vesseldetail['status']
+      
+      dataList.to_csv('src/Vessel Referential Correction.csv',columns=col_names, index=False)
+      
+      print("Completed: " + str(i) + " for: " + dataList.at[randomrow,'LLoydNumber'] + " - " + dataList.at[randomrow,'Name'] + " to " + dataList.at[randomrow,'Name_New'])
+      time.sleep(2)
+  except:
+    print('Error occurred')
