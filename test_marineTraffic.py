@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import json
 import pandas as pd
 import random
-
+import math
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -126,7 +126,7 @@ class TestMarineTraffic():
       #actions.move_to_element(overlaycheck).perform().click()
     vsldtl['name'] = self.driver.find_element(By.ID, "shipName").text.replace('Name: ','')
     
-    vsldtl['active'] = self.driver.find_element(By.ID, "status").text.replace('Status: ','')
+    vsldtl['status'] = self.driver.find_element(By.ID, "status").text.replace('Status: ','')
     # 16 | click | id=mmsi | 
     vsldtl['mmsi'] = self.driver.find_element(By.ID, "mmsi").text.replace('MMSI: ','')
     # 17 | click | id=callSign | 
@@ -207,27 +207,30 @@ class TestMarineTraffic():
     
 print("Script started at: ", datetime.now())
 dataList = pd.read_csv('src/Vessel Referential Correction.csv',header=0)
-dataList = dataList[dataList['Name_New'].isnull()]
+dataList = dataList.astype(str)
+#dataList = dataList[dataList['Name_New'].isnull()]
 IMOChecker = TestMarineTraffic('IMO Check', driverpath)
 
 #vesseldetail = IMOChecker.test_marineTraffic("9198305")
 #for index, rowList in dataList.iterrows(): 
 for i in range(len(dataList)):
   randomrow = random.randint(1,len(dataList)-1)
-  if (dataList.at[randomrow,'Name_New']==""):
+  if ('nan' == dataList.at[randomrow,'Name_New']):
     vesseldetail = IMOChecker.test_marineTraffic(dataList.at[randomrow,'LLoydNumber'])
     dataList.at[randomrow,'Name_New'] = vesseldetail['name']
     dataList.at[randomrow,'MMSI'] = vesseldetail['mmsi']
     dataList.at[randomrow,'GrossRegisterTonnage_New'] = vesseldetail['grosstonnage']
-    dataList.at[randomrow,'NetRegisterTonnage_NEW'] = vesseldetail['name']
+    dataList.at[randomrow,'NetRegisterTonnage_NEW'] = ''
     dataList.at[randomrow,'CallSign'] = vesseldetail['callsign']
     dataList.at[randomrow,'Flag'] = vesseldetail['flag']
     dataList.at[randomrow,'Length'] = vesseldetail['length']
     dataList.at[randomrow,'Beam'] = vesseldetail['beam']
-    #dataList.at[randomrow,'Draught'] = vesseldetail['name']
+    dataList.at[randomrow,'Draught'] = ''
     dataList.at[randomrow,'Deadweight'] = vesseldetail['deadweight']
     dataList.at[randomrow,'YearBuilt'] = vesseldetail['yearbuilt']
     dataList.at[randomrow,'OldNames'] = vesseldetail['oldnames']
     dataList.at[randomrow,'Status'] = vesseldetail['status']
     
     dataList.to_csv('src/Vessel Referential Correction.csv',columns=col_names, index=False)
+    
+    print("Completed: " + str(i))
