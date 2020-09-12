@@ -4,10 +4,13 @@ import time
 from datetime import datetime, timedelta
 import json
 import pandas as pd
+import random
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -54,54 +57,106 @@ class TestMarineTraffic():
 #     actions.move_to_element(element).perform()
 # =============================================================================
     # 10 | click | linkText=9357121 | 
-    self.driver.find_element(By.LINK_TEXT, str(imoNum)).click()
+    #self.driver.find_element(By.LINK_TEXT, str(imoNum)).click()
+    self.driver.get(self.driver.find_element(By.LINK_TEXT, str(imoNum)).get_attribute('href'))
 # =============================================================================
-#     # 11 | runScript | window.scrollTo(0,408) | 
-#     self.driver.execute_script("window.scrollTo(0,408)")
+#    # 11 | runScript | window.scrollTo(0,408) | 
+    #self.driver.execute_script("window.scrollTo(0,408)")
 #     # 12 | runScript | window.scrollTo(0,1062) | 
-#     self.driver.execute_script("window.scrollTo(0,1062)")
+    #self.driver.execute_script("window.scrollTo(0,1062)")
 #     # 13 | runScript | window.scrollTo(0,1295) | 
-#     self.driver.execute_script("window.scrollTo(0,1295)")
+    html = self.driver.find_element_by_tag_name('html')
+    html.send_keys(Keys.PAGE_DOWN)
+    time.sleep(0.5)
+    html.send_keys(Keys.PAGE_DOWN)
+    time.sleep(0.5)
+    html.send_keys(Keys.PAGE_DOWN)
+    time.sleep(0.5)
+    html.send_keys(Keys.PAGE_DOWN)
+    time.sleep(0.5)
+    html.send_keys(Keys.END)
+    time.sleep(0.5)
+    unlockelement = self.driver.find_element(By.ID, "unlockVesselInfoData") 
+    action = ActionChains(self.driver) 
+    action.move_to_element(unlockelement).perform() 
+    #self.driver.execute_script("window.scrollTo(0,3000)")
+    
+    time.sleep(0.25)
 #     # 14 | runScript | window.scrollTo(0,1816) | 
+    #WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.ID, 'shipName')))
 # =============================================================================
-    self.driver.execute_script("window.scrollTo(0,1816)")
+    #self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     # 15 | click | id=shipName | 
-    vsldtl['name'] = self.driver.find_element(By.ID, "shipName").text
+    
+    #https://intellipaat.com/community/9224/selenium-debugging-element-is-not-clickable-at-point-x-y
+    if len(self.driver.find_elements(By.XPATH,"/html/body/div[2]/div[3]/div/button")) !=0 :
+      overlaycheck = self.driver.find_element(By.XPATH,"/html/body/div[2]/div[3]/div/button")
+#    if (overlaycheck):
+      actions = ActionChains(self.driver)
+      #actions.move_to_element(element).perform()
+      actions.move_to_element(overlaycheck).perform().click()
+    
+    if len(self.driver.find_elements(By.ID, "shipName")) == 0:
+      overlaycheck = self.driver.find_element(By.XPATH,"/html/body/div[2]/div[3]/div/button")
+      overlaycheck.click()
+#    if (overlaycheck):
+      #actions = ActionChains(self.driver)
+      #actions.move_to_element(element).perform()
+      #actions.move_to_element(overlaycheck).perform().click()
+    vsldtl['name'] = self.driver.find_element(By.ID, "shipName").text.replace('Name: ','')
+    
+    vsldtl['active'] = self.driver.find_element(By.ID, "status").text.replace('Status: ','')
     # 16 | click | id=mmsi | 
-    vsldtl['mmsi'] = self.driver.find_element(By.ID, "mmsi").text
+    vsldtl['mmsi'] = self.driver.find_element(By.ID, "mmsi").text.replace('MMSI: ','')
     # 17 | click | id=callSign | 
-    vsldtl['callsign'] = self.driver.find_element(By.ID, "callSign").text
+    vsldtl['callsign'] = self.driver.find_element(By.ID, "callSign").text.replace('Call Sign: ','')
     # 18 | click | id=flag | 
-    vsldtl['flag'] = self.driver.find_element(By.ID, "flag").text
+    vsldtl['flag'] = self.driver.find_element(By.ID, "flag").text.replace('Flag: ','')
     # 19 | click | id=grossTonnage | 
-    vsldtl['grosstonnage'] = self.driver.find_element(By.ID, "grossTonnage").text
+    vsldtl['grosstonnage'] = self.driver.find_element(By.ID, "grossTonnage").text.replace('Gross Tonnage: ','')
     # 20 | click | id=summerDwt | 
-    vsldtl['deadweight'] = self.driver.find_element(By.ID, "summerDwt").text
-    # 21 | click | css=#lengthOverallBreadthExtreme > b | 
-    self.driver.find_element(By.CSS_SELECTOR, "#lengthOverallBreadthExtreme > b").click()
+    vsldtl['deadweight'] = self.driver.find_element(By.ID, "summerDwt").text.replace('Summer DWT: ','').replace(' t','')
+    
+    
     # 22 | click | id=lengthOverallBreadthExtreme | 
-    self.driver.find_element(By.ID, "lengthOverallBreadthExtreme").click()
-    # 23 | click | css=#yearBuild > b | 
-    self.driver.find_element(By.CSS_SELECTOR, "#yearBuild > b").click()
-    # 24 | click | css=#yearBuild > b | 
-    self.driver.find_element(By.CSS_SELECTOR, "#yearBuild > b").click()
-    # 25 | doubleClick | css=#yearBuild > b | 
-    element = self.driver.find_element(By.CSS_SELECTOR, "#yearBuild > b")
-    actions = ActionChains(self.driver)
-    actions.double_click(element).perform()
-    # 26 | click | css=#homePort > b | 
-    self.driver.find_element(By.CSS_SELECTOR, "#homePort > b").click()
-    # 27 | click | css=#homePort > b | 
-    self.driver.find_element(By.CSS_SELECTOR, "#homePort > b").click()
-    # 28 | click | css=#homePort > b | 
-    self.driver.find_element(By.CSS_SELECTOR, "#homePort > b").click()
-    # 29 | doubleClick | css=#homePort > b | 
-    element = self.driver.find_element(By.CSS_SELECTOR, "#homePort > b")
-    actions = ActionChains(self.driver)
-    actions.double_click(element).perform()
+    lengthxbeam = self.driver.find_element(By.ID, "lengthOverallBreadthExtreme").text.split(':')
+    if ' x ' in lengthxbeam[1]:
+      vsldtl['length'] = lengthxbeam[1].split(' x ')[0].replace('m','').replace(' ','')
+      vsldtl['beam'] = lengthxbeam[1].split(' x ')[1].replace('m','').replace(' ','')
+    else:
+      vsldtl['length'] = 'N/A'
+      vsldtl['beam'] = 'N/A'
+    
+    vsldtl['yearbuilt'] = self.driver.find_element(By.ID, "yearBuild").text.replace('Year Built: ','')
+    
+# =============================================================================
+#     # 23 | click | css=#yearBuild > b | 
+#     self.driver.find_element(By.CSS_SELECTOR, "#yearBuild > b").click()
+#     # 24 | click | css=#yearBuild > b | 
+#     self.driver.find_element(By.CSS_SELECTOR, "#yearBuild > b").click()
+#     # 25 | doubleClick | css=#yearBuild > b | 
+#     element = self.driver.find_element(By.CSS_SELECTOR, "#yearBuild > b")
+#     actions = ActionChains(self.driver)
+#     actions.double_click(element).perform()
+#     # 26 | click | css=#homePort > b | 
+#     self.driver.find_element(By.CSS_SELECTOR, "#homePort > b").click()
+#     # 27 | click | css=#homePort > b | 
+#     self.driver.find_element(By.CSS_SELECTOR, "#homePort > b").click()
+#     # 28 | click | css=#homePort > b | 
+#     self.driver.find_element(By.CSS_SELECTOR, "#homePort > b").click()
+#     # 29 | doubleClick | css=#homePort > b | 
+#     element = self.driver.find_element(By.CSS_SELECTOR, "#homePort > b")
+#     actions = ActionChains(self.driver)
+#     actions.double_click(element).perform()
+# =============================================================================
     # 30 | click | css=#Ex_Names_History-header .MuiSvgIcon-root | 
     self.driver.find_element(By.CSS_SELECTOR, "#Ex_Names_History-header .MuiSvgIcon-root").click()
     # 31 | click | css=.MuiTableBody-root > .MuiTableRow-root:nth-child(1) | 
+    namehistory = self.driver.find_elements(By.XPATH, "//*[@id='Ex_Names_History-content']/div/table/tbody/tr")
+    namelis
+    for x in range(len(namehistory)):
+      #print(namehistory.find_elements(By.XPATH, ""))
+      //*[@id="Ex_Names_History-content"]/div/table/tbody/tr[1]/td[1]/img
     self.driver.find_element(By.CSS_SELECTOR, ".MuiTableBody-root > .MuiTableRow-root:nth-child(1)").click()
     # 32 | click | css=.MuiTableRow-root:nth-child(2) | 
     self.driver.find_element(By.CSS_SELECTOR, ".MuiTableRow-root:nth-child(2)").click()
@@ -115,9 +170,12 @@ class TestMarineTraffic():
     self.driver.find_element(By.CSS_SELECTOR, ".MuiTablePagination-actions").click()
   
 print("Script started at: ", datetime.now())
-dataList = pd.read_csv('samples/Vessel Referential Correction.csv')
+dataList = pd.read_csv('src/Vessel Referential Correction.csv',header=0)
+dataList = dataList[dataList['Name_New'].isnull()]
 IMOChecker = TestMarineTraffic('IMO Check', driverpath)
 
-for index, rowList in dataList.iterrows(): 
-  NAME_NEW, GRT_NEW, NRT_NEW = IMOChecker.test_marineTraffic(rowList.LLoydNumber)
+#for index, rowList in dataList.iterrows(): 
+for i in range(len(dataList)):
+  randomrow = random.randint(1,len(dataList)-1)
+  NAME_NEW, GRT_NEW, NRT_NEW = IMOChecker.test_marineTraffic(dataList.at[randomrow,'LLoydNumber'])
     
