@@ -15,6 +15,27 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 driverpath = r"bin\chromedriver_win32\chromedriver.exe"
+col_names = [
+'Name'
+,'LLoydNumber'
+,'GrossRegisterTonnage'
+,'NetRegisterTonnage'
+,'Latest VOS'
+,'Latest ETA'
+,'Name_New'
+,'MMSI'
+,'GrossRegisterTonnage_New'
+,'NetRegisterTonnage_NEW'
+,'CallSign'
+,'Flag'
+,'Length'
+,'Beam'
+,'Draught'
+,'Deadweight'
+,'YearBuilt'
+,'OldNames'
+,'Status'
+]
 
 
 class TestMarineTraffic():
@@ -74,8 +95,8 @@ class TestMarineTraffic():
     time.sleep(0.5)
     html.send_keys(Keys.PAGE_DOWN)
     time.sleep(0.5)
-    html.send_keys(Keys.END)
-    time.sleep(0.5)
+    #html.send_keys(Keys.END)
+    #time.sleep(0.5)
     unlockelement = self.driver.find_element(By.ID, "unlockVesselInfoData") 
     action = ActionChains(self.driver) 
     action.move_to_element(unlockelement).perform() 
@@ -116,8 +137,14 @@ class TestMarineTraffic():
     vsldtl['grosstonnage'] = self.driver.find_element(By.ID, "grossTonnage").text.replace('Gross Tonnage: ','')
     # 20 | click | id=summerDwt | 
     vsldtl['deadweight'] = self.driver.find_element(By.ID, "summerDwt").text.replace('Summer DWT: ','').replace(' t','')
-    
-    
+# =============================================================================
+#     vsldtl['draught'] = ''
+#     searchstring = 'current draught is reported to be'
+#     summarysec = self.driver.find_element(By.XPATH, "//*[@id='vesselDetails_summarySection']/div[2]/div/div/div/div[6]/div")
+#     if searchstring in summarysec:
+#       position = summarysec.find(searchstring)
+#       vsldtl['draught'] = summarysec[position+len(searchstring):position+len(searchstring)+12]
+# =============================================================================
     # 22 | click | id=lengthOverallBreadthExtreme | 
     lengthxbeam = self.driver.find_element(By.ID, "lengthOverallBreadthExtreme").text.split(':')
     if ' x ' in lengthxbeam[1]:
@@ -153,29 +180,54 @@ class TestMarineTraffic():
     self.driver.find_element(By.CSS_SELECTOR, "#Ex_Names_History-header .MuiSvgIcon-root").click()
     # 31 | click | css=.MuiTableBody-root > .MuiTableRow-root:nth-child(1) | 
     namehistory = self.driver.find_elements(By.XPATH, "//*[@id='Ex_Names_History-content']/div/table/tbody/tr")
-    namelis
+    namelist = ''
     for x in range(len(namehistory)):
+      flag = namehistory[x].find_element(By.XPATH, "td[1]/img").get_attribute("alt")
+      name = namehistory[x].find_element(By.XPATH, "td[2]").text
+      lastdate = namehistory[x].find_element(By.XPATH, "td[3]").text
+      namelist = namelist + flag + '~' + name + '~' + lastdate + '|'
       #print(namehistory.find_elements(By.XPATH, ""))
-      //*[@id="Ex_Names_History-content"]/div/table/tbody/tr[1]/td[1]/img
-    self.driver.find_element(By.CSS_SELECTOR, ".MuiTableBody-root > .MuiTableRow-root:nth-child(1)").click()
+    vsldtl['oldnames'] = namelist
+    #self.driver.find_element(By.CSS_SELECTOR, ".MuiTableBody-root > .MuiTableRow-root:nth-child(1)").click()
     # 32 | click | css=.MuiTableRow-root:nth-child(2) | 
-    self.driver.find_element(By.CSS_SELECTOR, ".MuiTableRow-root:nth-child(2)").click()
+    #self.driver.find_element(By.CSS_SELECTOR, ".MuiTableRow-root:nth-child(2)").click()
     # 33 | click | css=.MuiTableRow-root:nth-child(3) > .MuiTableCell-root:nth-child(2) | 
-    self.driver.find_element(By.CSS_SELECTOR, ".MuiTableRow-root:nth-child(3) > .MuiTableCell-root:nth-child(2)").click()
+    #self.driver.find_element(By.CSS_SELECTOR, ".MuiTableRow-root:nth-child(3) > .MuiTableCell-root:nth-child(2)").click()
     # 34 | click | css=.MuiTableRow-root:nth-child(3) | 
-    self.driver.find_element(By.CSS_SELECTOR, ".MuiTableRow-root:nth-child(3)").click()
+    #self.driver.find_element(By.CSS_SELECTOR, ".MuiTableRow-root:nth-child(3)").click()
     # 35 | click | css=.MuiTablePagination-actions | 
-    self.driver.find_element(By.CSS_SELECTOR, ".MuiTablePagination-actions").click()
+    #self.driver.find_element(By.CSS_SELECTOR, ".MuiTablePagination-actions").click()
     # 36 | click | css=.MuiTablePagination-actions | 
-    self.driver.find_element(By.CSS_SELECTOR, ".MuiTablePagination-actions").click()
-  
+    #self.driver.find_element(By.CSS_SELECTOR, ".MuiTablePagination-actions").click()
+    return vsldtl
+    
+    
+    
+    
+    
 print("Script started at: ", datetime.now())
 dataList = pd.read_csv('src/Vessel Referential Correction.csv',header=0)
 dataList = dataList[dataList['Name_New'].isnull()]
 IMOChecker = TestMarineTraffic('IMO Check', driverpath)
 
+#vesseldetail = IMOChecker.test_marineTraffic("9198305")
 #for index, rowList in dataList.iterrows(): 
 for i in range(len(dataList)):
   randomrow = random.randint(1,len(dataList)-1)
-  NAME_NEW, GRT_NEW, NRT_NEW = IMOChecker.test_marineTraffic(dataList.at[randomrow,'LLoydNumber'])
+  if (dataList.at[randomrow,'Name_New']==""):
+    vesseldetail = IMOChecker.test_marineTraffic(dataList.at[randomrow,'LLoydNumber'])
+    dataList.at[randomrow,'Name_New'] = vesseldetail['name']
+    dataList.at[randomrow,'MMSI'] = vesseldetail['mmsi']
+    dataList.at[randomrow,'GrossRegisterTonnage_New'] = vesseldetail['grosstonnage']
+    dataList.at[randomrow,'NetRegisterTonnage_NEW'] = vesseldetail['name']
+    dataList.at[randomrow,'CallSign'] = vesseldetail['callsign']
+    dataList.at[randomrow,'Flag'] = vesseldetail['flag']
+    dataList.at[randomrow,'Length'] = vesseldetail['length']
+    dataList.at[randomrow,'Beam'] = vesseldetail['beam']
+    #dataList.at[randomrow,'Draught'] = vesseldetail['name']
+    dataList.at[randomrow,'Deadweight'] = vesseldetail['deadweight']
+    dataList.at[randomrow,'YearBuilt'] = vesseldetail['yearbuilt']
+    dataList.at[randomrow,'OldNames'] = vesseldetail['oldnames']
+    dataList.at[randomrow,'Status'] = vesseldetail['status']
     
+    dataList.to_csv('src/Vessel Referential Correction.csv',columns=col_names, index=False)
