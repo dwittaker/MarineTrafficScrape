@@ -243,5 +243,7 @@ for i in range(len(dataList)):
       
       print("Completed: " + str(i) + " for: " + dataList.at[randomrow,'LLoydNumber'] + " - " + dataList.at[randomrow,'Name'] + " to " + dataList.at[randomrow,'Name_New'])
       time.sleep(2)
+    else:
+      print("Done already: " + str(i))
   except:
     print('Error occurred')
