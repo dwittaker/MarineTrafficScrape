@@ -216,12 +216,13 @@ dataList = pd.read_csv('src/Vessel Referential Correction.csv',header=0)
 dataList = dataList.astype(str)
 #dataList = dataList[dataList['Name_New'].isnull()]
 IMOChecker = TestMarineTraffic('IMO Check', driverpath)
-
+#dfToDo = 
 #vesseldetail = IMOChecker.test_marineTraffic("9085596")
 #for index, rowList in dataList.iterrows(): 
 for i in range(len(dataList)):
   try:
-    randomrow = random.randint(1,len(dataList)-1)
+    #randomrow = random.randint(1,len(dataList)-1)
+    randomrow = random.choice(dataList[dataList['Name_New'] == 'nan'].index)
     if ('nan' == dataList.at[randomrow,'Name_New']):
       print("Started: " + str(i) + " for: " + dataList.at[randomrow,'LLoydNumber'])
       vesseldetail = IMOChecker.test_marineTraffic(dataList.at[randomrow,'LLoydNumber'])
